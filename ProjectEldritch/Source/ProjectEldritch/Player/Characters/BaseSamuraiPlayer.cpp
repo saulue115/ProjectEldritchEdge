@@ -11,9 +11,11 @@ ABaseSamuraiPlayer::ABaseSamuraiPlayer()
 
 	BoomCamera = CreateDefaultSubobject<USpringArmComponent>(TEXT("Boom Camera"));
 	BoomCamera->TargetArmLength = 600.0f;
+	BoomCamera->bUsePawnControlRotation = true;
 	BoomCamera->SetupAttachment(RootComponent);
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Follow Camer"));
+	FollowCamera->bUsePawnControlRotation = false;
 	FollowCamera->SetupAttachment(BoomCamera, USpringArmComponent::SocketName);
 
 }

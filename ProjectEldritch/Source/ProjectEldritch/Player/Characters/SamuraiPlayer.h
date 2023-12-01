@@ -5,8 +5,7 @@
 #include "CoreMinimal.h"
 #include "BaseSamuraiPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "EnhancedInputComponent.h"
-#include "GameFramework/PlayerInput.h"
+#include "InputActionValue.h"
 #include "SamuraiPlayer.generated.h"
 
 /**
@@ -28,23 +27,30 @@ public:
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* LookAction;
+
+protected:
+
+	// APawn interface
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void BeginPlay();
 	
 
 public:
 
 
 	UFUNCTION()
-		void MoveForward(float Value);
+		void Move(const FInputActionValue& Value);
+
+	
 
 	UFUNCTION()
-		void MoveRight(float Value);
+		void Look(const FInputActionValue& Value);
 
-
-	UFUNCTION()
-		void LookUp(float Rate);
-
-	UFUNCTION()
-		void Turn(float Rate);
+	
 
 
 };
