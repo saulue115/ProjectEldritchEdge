@@ -15,13 +15,17 @@ class PROJECTELDRITCH_API ABaseSamuraiPlayer : public ACharacter
 
 public:
 	// Sets default values for this character's properties
-	ABaseSamuraiPlayer();
+	ABaseSamuraiPlayer(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Components)
 		TObjectPtr<UCameraComponent> FollowCamera = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Components)
 		TObjectPtr<USpringArmComponent> BoomCamera = nullptr;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
+		uint8 bIsInCombat : 1;
 
 protected:
 	// Called when the game starts or when spawned

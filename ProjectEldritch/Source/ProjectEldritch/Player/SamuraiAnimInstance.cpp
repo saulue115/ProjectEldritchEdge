@@ -26,5 +26,9 @@ void USamuraiAnimInstance::BlueprintUpdateProperties(float DeltaTime)
 
 	bIsJumping = Player->GetCharacterMovement()->IsFalling();
 
+	bHasSwordEquipped = Player->bSwordEquipped;
+
+	bIsInDefenseMode = Player->IsInDefense();
+
 	Direction = CalculateDirection(Velocity, BaseRotation);
 }

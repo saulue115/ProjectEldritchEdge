@@ -42,5 +42,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SamuraiAnimation)
 		uint8 bIsJumping : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SamuraiAnimation)
+		uint8 bHasSwordEquipped : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SamuraiAnimation)
+		uint8 bIsInDefenseMode : 1;
 	
 };

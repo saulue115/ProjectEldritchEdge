@@ -4,10 +4,13 @@
 #include "SamuraiPlayer.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "../Components/SamuraiMovementComponent.h"
+#include "Engine/Engine.h"
 #include "Components/InputComponent.h"
 
 
-ASamuraiPlayer::ASamuraiPlayer(const FObjectInitializer& ObjectInitializer)
+ASamuraiPlayer::ASamuraiPlayer(const FObjectInitializer& ObjectInitializer) : 
+	Super(ObjectInitializer.SetDefaultSubobjectClass<USamuraiMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
@@ -33,6 +36,8 @@ void ASamuraiPlayer::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	InitAnimations();
 }
 
 void ASamuraiPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -42,6 +47,16 @@ void ASamuraiPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	{
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASamuraiPlayer::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASamuraiPlayer::Look);
+
+		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &ASamuraiPlayer::StartRunning);
+		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::None, this, &ASamuraiPlayer::EndRunning);
+
+		EnhancedInputComponent->BindAction(EquipSwordAction, ETriggerEvent::Triggered, this, &ASamuraiPlayer::EquipSword);
+
+		EnhancedInputComponent->BindAction(DefenseAction, ETriggerEvent::Triggered, this, &ASamuraiPlayer::StartDefense);
+		EnhancedInputComponent->BindAction(DefenseAction, ETriggerEvent::None, this, &ASamuraiPlayer::EndDefense);
+
+		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Triggered, this, &ASamuraiPlayer::PlayDodgeMontage);
 	}
 }
 
@@ -82,4 +97,126 @@ void ASamuraiPlayer::Look(const FInputActionValue& Value)
 	}
 }
 
+void ASamuraiPlayer::StartRunning()
+{
+	bWantsToRun = true;
+}
 
+void ASamuraiPlayer::EndRunning()
+{
+	bWantsToRun = false;
+}
+
+bool ASamuraiPlayer::IsRunning()
+{
+	return bWantsToRun && !GetVelocity().IsZero();
+}
+
+void ASamuraiPlayer::EquipSword()
+{
+
+	auto OwnMovementComponent = Cast<USamuraiMovementComponent>(GetCharacterMovement());
+
+	if (!EquipSwordAnimMontage || !OwnMovementComponent) return;
+
+	if (!bEquipSwordAnimInProgress)
+	{
+		PlayAnimMontage(EquipSwordAnimMontage);
+
+		bEquipSwordAnimInProgress = true;
+
+		bSwordEquipped = true;
+
+		GetCharacterMovement()->MaxWalkSpeed = MovementSpeedInCombatMode;
+
+		OwnMovementComponent->RunModifier = 2.5f;
+
+		
+	}
+	
+
+	
+}
+
+void ASamuraiPlayer::InitAnimations()
+{
+
+
+	if (!EquipSwordAnimMontage || !DodgeAnimMontage) return;
+
+	auto EquipSwordAnimation = FindNotifyByClass<UEquipSwordAnimNotify>(EquipSwordAnimMontage);
+
+	auto DodgeAnimation = FindNotifyByClass<UDodgeAnimNotify>(DodgeAnimMontage);
+
+	if (EquipSwordAnimation)
+	{
+		EquipSwordAnimation->OnNotified.AddUObject(this, &ASamuraiPlayer::OnEquipSwordFinished);
+	}
+
+	if (DodgeAnimation)
+	{
+		DodgeAnimation->OnNotified.AddUObject(this, &ASamuraiPlayer::OnDodgeFinished);
+	}
+
+
+}
+
+
+void ASamuraiPlayer::OnEquipSwordFinished(USkeletalMeshComponent* MeshComponent)
+{
+	if (GetMesh() != MeshComponent) return;
+
+	bEquipSwordAnimInProgress = false;
+
+	bDefenseMode = false;
+
+	bIsInCombat = true;
+	
+}
+
+void ASamuraiPlayer::OnDodgeFinished(USkeletalMeshComponent* MeshComponent)
+{
+	if (GetMesh() != MeshComponent) return;
+
+	bDodgeAnimInProgress = false;
+}
+
+
+
+bool ASamuraiPlayer::IsInDefense()
+{
+	
+	return bDefenseMode && bSwordEquipped && bIsInCombat;
+}
+
+void ASamuraiPlayer::StartDefense()
+{
+	if (bIsInCombat)
+	{
+		bWantsToRun = false;
+
+		bDefenseMode = true;
+	}
+
+	
+
+}
+
+void ASamuraiPlayer::EndDefense()
+{
+	bDefenseMode = false;
+}
+
+void ASamuraiPlayer::PlayDodgeMontage()
+{
+	if (!DodgeAnimMontage) return;
+
+
+	if (!bDodgeAnimInProgress && !GetVelocity().IsZero() && bIsInCombat)
+	{
+		PlayAnimMontage(DodgeAnimMontage, 1.2f);
+
+		bDodgeAnimInProgress = true;
+	}
+	
+}

@@ -6,6 +6,9 @@
 #include "BaseSamuraiPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "InputActionValue.h"
+#include "Animation/AnimMontage.h"
+#include "../Animations/EquipSwordAnimNotify.h"
+#include "../Animations/DodgeAnimNotify.h"
 #include "SamuraiPlayer.generated.h"
 
 /**
@@ -24,12 +27,48 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputMappingContext* DefaultMappingContext;
 
-	/** Jump Input Action */
+	/** Input Actions */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* MoveAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* LookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* RunAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* EquipSwordAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* DefenseAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* DodgeAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+		uint8 bWantsToRun : 1;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+		UAnimMontage* EquipSwordAnimMontage = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+		UAnimMontage* DodgeAnimMontage = nullptr;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
+	uint8 bEquipSwordAnimInProgress : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
+		uint8 bDodgeAnimInProgress : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
+		uint8 bSwordEquipped : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
+		uint8 bDefenseMode : 1;
+
+	float MovementSpeedInCombatMode = 350.0f;
 
 protected:
 
@@ -50,7 +89,62 @@ public:
 	UFUNCTION()
 		void Look(const FInputActionValue& Value);
 
+
+	UFUNCTION()
+		void StartRunning();
+
+	UFUNCTION()
+		void EndRunning();
 	
+	UFUNCTION()
+		bool IsRunning();
+
+	UFUNCTION()
+		void EquipSword();
+
+
+	UFUNCTION()
+		bool IsInDefense();
+
+	UFUNCTION()
+		void StartDefense();
+
+	UFUNCTION()
+		void EndDefense();
+
+
+	UFUNCTION()
+		void PlayDodgeMontage();
+
+	//Anim Notiofies
+	UFUNCTION()
+		void OnEquipSwordFinished(USkeletalMeshComponent* MeshComponent);
+
+	UFUNCTION()
+		void OnDodgeFinished(USkeletalMeshComponent* MeshComponent);
+
+	UFUNCTION()
+		void InitAnimations();
+
+
+	//anim notify template
+	template<typename T>
+	T* FindNotifyByClass(UAnimSequenceBase* Animation)
+	{
+		if (!Animation) return nullptr;
+
+		const auto NotifyEvents = Animation->Notifies;
+
+		for (auto NotifyEvent : NotifyEvents)
+		{
+			auto AnimNotify = Cast<T>(NotifyEvent.Notify);
+
+			if (AnimNotify) return AnimNotify;
+		}
+
+		return nullptr;
+	}
+
 
 
 };
