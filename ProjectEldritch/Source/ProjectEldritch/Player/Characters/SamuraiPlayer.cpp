@@ -57,6 +57,8 @@ void ASamuraiPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(DefenseAction, ETriggerEvent::None, this, &ASamuraiPlayer::EndDefense);
 
 		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Triggered, this, &ASamuraiPlayer::PlayDodgeMontage);
+
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASamuraiPlayer::Attack);
 	}
 }
 
@@ -138,15 +140,19 @@ void ASamuraiPlayer::EquipSword()
 	
 }
 
+
+
 void ASamuraiPlayer::InitAnimations()
 {
 
 
-	if (!EquipSwordAnimMontage || !DodgeAnimMontage) return;
+	if (!EquipSwordAnimMontage || !DodgeAnimMontage || AttackAnimMontageArray.Num() == 0) return;
 
 	auto EquipSwordAnimation = FindNotifyByClass<UEquipSwordAnimNotify>(EquipSwordAnimMontage);
 
 	auto DodgeAnimation = FindNotifyByClass<UDodgeAnimNotify>(DodgeAnimMontage);
+
+	//auto AttackAnimations = FindNotifiesByClass<UAttackAnimNotify>(AttackAnimMontageArray[0]);
 
 	if (EquipSwordAnimation)
 	{
@@ -158,7 +164,21 @@ void ASamuraiPlayer::InitAnimations()
 		DodgeAnimation->OnNotified.AddUObject(this, &ASamuraiPlayer::OnDodgeFinished);
 	}
 
+	/*if (AttackAnimations)
+	{
+		AttackAnimations->OnNotified.AddUObject(this, &ASamuraiPlayer::OnAttackFinished);
+	}*/
 
+	// Para AttackAnimMontageArray
+	for (auto AttackAnimMontage : AttackAnimMontageArray)
+	{
+		auto AttackNotifies = FindNotifiesByClass<UAttackAnimNotify>(AttackAnimMontage);
+
+		for (auto AttackNotify : AttackNotifies)
+		{
+			AttackNotify->OnNotified.AddUObject(this, &ASamuraiPlayer::OnAttackFinished);
+		}
+	}
 }
 
 
@@ -181,6 +201,13 @@ void ASamuraiPlayer::OnDodgeFinished(USkeletalMeshComponent* MeshComponent)
 	bDodgeAnimInProgress = false;
 }
 
+
+void ASamuraiPlayer::OnAttackFinished(USkeletalMeshComponent* MeshComponent)
+{
+	if (GetMesh() != MeshComponent) return;
+
+	bAttackAnimInProgress = false;
+}
 
 
 bool ASamuraiPlayer::IsInDefense()
@@ -219,4 +246,70 @@ void ASamuraiPlayer::PlayDodgeMontage()
 		bDodgeAnimInProgress = true;
 	}
 	
+}
+
+void ASamuraiPlayer::Attack()
+{
+	if (!bIsInCombat || !bSwordEquipped || bEquipSwordAnimInProgress || bDodgeAnimInProgress || AttackAnimMontageArray.Num() == 0) return;
+
+
+	int32 CurrentAttackInt = 0;
+
+	int32 NumAttackMontages = AttackAnimMontageArray.Num();
+
+	int32 AttackInt = FMath::RandRange(0, NumAttackMontages - 1);
+
+	if (!bAttackAnimInProgress)
+	{
+		
+	
+		if (AttackInt == CurrentAttackInt)
+		{
+			// Incrementar o decrementar el índice de ataque para evitar la repetición
+			if (AttackInt == 0)
+			{
+				AttackInt++;
+			}
+			else
+			{
+				AttackInt--;
+			}
+
+			CurrentAttackInt = AttackInt;
+
+			// Reproducir la animación
+			PlayAnimMontage(AttackAnimMontageArray[CurrentAttackInt]);
+
+			bAttackAnimInProgress = true;
+		}
+		else {
+				CurrentAttackInt = AttackInt;
+
+
+			// Reproducir la animación
+				PlayAnimMontage(AttackAnimMontageArray[CurrentAttackInt]);
+
+				bAttackAnimInProgress = true;
+		}
+		//
+		//while (AttackInt == CurrentAttackInt)
+		//{
+		//	AttackInt = FMath::RandRange(0, NumAttackMontages - 1);
+		//}
+
+		//CurrentAttackInt = AttackInt;
+
+		//if (!bAttackAnimInProgress)
+		//{
+		//	// Reproducir la animación
+		//	PlayAnimMontage(AttackAnimMontageArray[CurrentAttackInt]);
+
+		//	bAttackAnimInProgress = true;
+		//}
+
+		
+	}
+	
+
+
 }

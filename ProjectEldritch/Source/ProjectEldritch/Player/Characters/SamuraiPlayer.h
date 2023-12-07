@@ -9,6 +9,7 @@
 #include "Animation/AnimMontage.h"
 #include "../Animations/EquipSwordAnimNotify.h"
 #include "../Animations/DodgeAnimNotify.h"
+#include "../Animations/AttackAnimNotify.h"
 #include "SamuraiPlayer.generated.h"
 
 /**
@@ -46,6 +47,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* DodgeAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* AttackAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 		uint8 bWantsToRun : 1;
 
@@ -55,12 +59,22 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 		UAnimMontage* DodgeAnimMontage = nullptr;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+		TArray<TObjectPtr<UAnimMontage>> AttackAnimMontageArray;
+
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
 	uint8 bEquipSwordAnimInProgress : 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
 		uint8 bDodgeAnimInProgress : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
+		uint8 bAttackAnimInProgress : 1;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
 		uint8 bSwordEquipped : 1;
@@ -116,6 +130,11 @@ public:
 	UFUNCTION()
 		void PlayDodgeMontage();
 
+
+	UFUNCTION()
+		void Attack();
+
+
 	//Anim Notiofies
 	UFUNCTION()
 		void OnEquipSwordFinished(USkeletalMeshComponent* MeshComponent);
@@ -123,14 +142,39 @@ public:
 	UFUNCTION()
 		void OnDodgeFinished(USkeletalMeshComponent* MeshComponent);
 
+
+	UFUNCTION()
+		void OnAttackFinished(USkeletalMeshComponent* MeshComponent);
+
 	UFUNCTION()
 		void InitAnimations();
 
 
 	//anim notify template
 	template<typename T>
+	TArray<T*> FindNotifiesByClass(UAnimSequenceBase* Animation)
+	{
+		TArray<T*> FoundNotifies;
+
+		if (!Animation) return FoundNotifies;
+
+		const auto NotifyEvents = Animation->Notifies;
+
+		for (auto NotifyEvent : NotifyEvents)
+		{
+			auto AnimNotify = Cast<T>(NotifyEvent.Notify);
+
+			if (AnimNotify) FoundNotifies.Add(AnimNotify);
+		}
+
+		return FoundNotifies;
+	}
+
+	template<typename T>
 	T* FindNotifyByClass(UAnimSequenceBase* Animation)
 	{
+		//TArray<T*> FoundNotifies;
+
 		if (!Animation) return nullptr;
 
 		const auto NotifyEvents = Animation->Notifies;
@@ -144,7 +188,6 @@ public:
 
 		return nullptr;
 	}
-
 
 
 };
