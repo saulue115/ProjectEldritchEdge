@@ -10,13 +10,15 @@
 #include "../Animations/EquipSwordAnimNotify.h"
 #include "../Animations/DodgeAnimNotify.h"
 #include "../Animations/AttackAnimNotify.h"
+#include "../../Enemy/Players/OnryoSamuraiEnemy.h"
+#include "../../Utils/ReadyToFightInterface.h"
 #include "SamuraiPlayer.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTELDRITCH_API ASamuraiPlayer : public ABaseSamuraiPlayer
+class PROJECTELDRITCH_API ASamuraiPlayer : public ABaseSamuraiPlayer,public IReadyToFightInterface
 {
 	GENERATED_BODY()
 
@@ -50,9 +52,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* AttackAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* LockAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 		uint8 bWantsToRun : 1;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+		uint8 bIsLock : 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 		UAnimMontage* EquipSwordAnimMontage = nullptr;
@@ -84,6 +92,9 @@ public:
 
 	float MovementSpeedInCombatMode = 350.0f;
 
+	// Declarar un TMap para mapear FString a AOnryoSamuraiEnemy
+	TMap<float, AOnryoSamuraiEnemy*> EnemyDictionary;
+
 protected:
 
 	// APawn interface
@@ -91,6 +102,7 @@ protected:
 
 	virtual void BeginPlay();
 	
+	virtual void Tick(float DeltaTime);
 
 public:
 
@@ -135,6 +147,19 @@ public:
 		void Attack();
 
 
+	UFUNCTION()
+		void ToggleLock();
+
+	UFUNCTION()
+		void Lock();
+
+	UFUNCTION()
+		void IsLock();
+
+	UFUNCTION()
+		void UnLock();
+
+
 	//Anim Notiofies
 	UFUNCTION()
 		void OnEquipSwordFinished(USkeletalMeshComponent* MeshComponent);
@@ -148,6 +173,9 @@ public:
 
 	UFUNCTION()
 		void InitAnimations();
+
+	// Implementa la función ReadyToFight de la interfaz
+	bool ReactToTrigger_Implementation() override;
 
 
 	//anim notify template

@@ -18,6 +18,8 @@ void ABaseEnemy::BeginPlay()
 	
 }
 
+
+
 // Called every frame
 void ABaseEnemy::Tick(float DeltaTime)
 {

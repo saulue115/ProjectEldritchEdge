@@ -6,6 +6,9 @@
 #include "EnhancedInputComponent.h"
 #include "../Components/SamuraiMovementComponent.h"
 #include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Engine/Engine.h"
 #include "Components/InputComponent.h"
 
 
@@ -40,6 +43,48 @@ void ASamuraiPlayer::BeginPlay()
 	InitAnimations();
 }
 
+void ASamuraiPlayer::Tick(float DeltaTime)
+{
+	if (bIsLock)
+	{
+		// Obtener el enemigo más cercano del diccionario
+		AOnryoSamuraiEnemy* NearestEnemy = nullptr;
+		float NearestDistance = MAX_FLT;
+
+		for (const auto& Pair : EnemyDictionary)
+		{
+			AOnryoSamuraiEnemy* Enemy = Pair.Value;
+
+			// Calcular la distancia al enemigo
+			float DistanceToEnemy = FVector::Distance(GetActorLocation(), Enemy->GetActorLocation());
+
+			// Actualizar el enemigo más cercano si es más cercano que el actual
+			if (DistanceToEnemy < NearestDistance)
+			{
+				NearestEnemy = Enemy;
+				NearestDistance = DistanceToEnemy;
+			}
+		}
+
+		if (NearestEnemy)
+		{
+			// Calcular la dirección hacia el enemigo más cercano
+			FVector DirectionToEnemy = NearestEnemy->GetActorLocation() - GetActorLocation();
+			DirectionToEnemy.Normalize();
+
+			// Calcular la rotación basada en la dirección hacia el enemigo más cercano
+			FRotator NewRotation = DirectionToEnemy.Rotation();
+
+			// Establecer la rotación del jugador
+			SetActorRotation(NewRotation);
+
+			// Aquí puedes agregar lógica adicional, como mover al jugador hacia el enemigo, etc.
+			// ...
+		}
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, TEXT("LOCK ACTIVADOOOOOO"));
+	}
+}
+
 void ASamuraiPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 
@@ -59,6 +104,9 @@ void ASamuraiPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Triggered, this, &ASamuraiPlayer::PlayDodgeMontage);
 
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASamuraiPlayer::Attack);
+
+		EnhancedInputComponent->BindAction(LockAction, ETriggerEvent::Completed , this, &ASamuraiPlayer::ToggleLock);
+		//EnhancedInputComponent->BindAction(LockAction, ETriggerEvent::Canceled, this, &ASamuraiPlayer::UnLock);
 	}
 }
 
@@ -129,6 +177,15 @@ void ASamuraiPlayer::EquipSword()
 
 		bSwordEquipped = true;
 
+		if (ReactToTrigger_Implementation())
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, TEXT("INTERFACEEE LLAMADO"));
+		}
+
+		//ReadyToFight();
+
+		//Execute_ReadyToFight(this);
+
 		GetCharacterMovement()->MaxWalkSpeed = MovementSpeedInCombatMode;
 
 		OwnMovementComponent->RunModifier = 2.5f;
@@ -180,6 +237,13 @@ void ASamuraiPlayer::InitAnimations()
 		}
 	}
 }
+
+bool ASamuraiPlayer::ReactToTrigger_Implementation()
+{
+	return true;
+}
+
+
 
 
 void ASamuraiPlayer::OnEquipSwordFinished(USkeletalMeshComponent* MeshComponent)
@@ -312,4 +376,65 @@ void ASamuraiPlayer::Attack()
 	
 
 
+}
+
+void ASamuraiPlayer::ToggleLock()
+{
+	bIsLock = !bIsLock;  // Alterna entre true y false
+
+	if (bIsLock)
+	{
+		Lock();  // Llamada a la función Lock si se activa el bloqueo
+	}
+	else
+	{
+		UnLock();  // Llamada a la función Unlock si se desactiva el bloqueo
+	}
+}
+
+void ASamuraiPlayer::Lock()
+{
+	//if (!bIsLock) return;
+
+	bIsLock = true;
+
+	TArray<AActor*> FoundEnemies;
+
+
+	UGameplayStatics::GetAllActorsOfClass(this,AOnryoSamuraiEnemy::StaticClass(),FoundEnemies);
+
+	EnemyDictionary.Empty();
+
+	// Llenar el diccionario usando un identificador único
+	for (AActor* Actor : FoundEnemies)
+	{
+		AOnryoSamuraiEnemy* Enemy = Cast<AOnryoSamuraiEnemy>(Actor);
+		if (Enemy)
+		{
+			//FString EnemyIdentifier = Enemy->GetUniqueIdentifier();  // Debes implementar una función GetUniqueIdentifier en tu clase
+			float DistanceToEnemy = FVector::Distance(GetActorLocation(), Enemy->GetActorLocation());
+			EnemyDictionary.Add(DistanceToEnemy, Enemy);
+			
+		}
+
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, TEXT("LOCK ON ENEMYYYYYY"));
+		
+
+		
+		
+	}
+
+
+	
+}
+
+
+void ASamuraiPlayer::IsLock()
+{
+	bIsLock = true;
+}
+
+void ASamuraiPlayer::UnLock()
+{
+	bIsLock = false;
 }

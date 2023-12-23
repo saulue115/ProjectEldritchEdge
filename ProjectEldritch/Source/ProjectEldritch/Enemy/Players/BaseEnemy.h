@@ -19,10 +19,18 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	
+
+	
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
+		uint8 bSwordEquipped : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
+		uint8 bDefenseMode : 1;
 
 };

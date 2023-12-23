@@ -4,30 +4,30 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "./Characters/SamuraiPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "SamuraiAnimInstance.generated.h"
+#include "../Enemy/Players/OnryoSamuraiEnemy.h"
+#include "OnryoAnimInstance.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTELDRITCH_API USamuraiAnimInstance : public UAnimInstance
+class PROJECTELDRITCH_API UOnryoAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 
 public:
 
-	USamuraiAnimInstance();
+	UOnryoAnimInstance();
+	
 
 	virtual void NativeInitializeAnimation();
 
 	UFUNCTION(BlueprintCallable, Category = SamuraiAnimation)
 		void BlueprintUpdateProperties(float DeltaTime);
 
-	//ACharacter
 
-	ASamuraiPlayer* Player = nullptr;
+	AOnryoSamuraiEnemy* Enemy = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SamuraiAnimation)
 		float Speed = 0.0f;
@@ -49,5 +49,5 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SamuraiAnimation)
 		uint8 bIsInDefenseMode : 1;
-	
+
 };
